@@ -1,6 +1,7 @@
 # Capstone-Demo
 UBC Team 48 capstone project demonstration of a concussion IMU.
 A live visualization of rotational positioning of the sensor.
+
 Libaries used
 ------
 Will be using Flask and pyserial library. Installation notes are below
