@@ -2,6 +2,7 @@
 #Team 48
 
 #import json
+import re
 import threading
 import time
 
@@ -30,8 +31,16 @@ bno_changed = threading.Condition()
 # the first request is served (see start_bno_thread below).
 bno_thread = None
 
-ser = serial.Serial('COM4', 9600)
+#ser = serial.Serial('COM4', 9600)
 time.sleep(2)
-while True:
-    read = ser.readline()
-    print(read)
+#while True:
+read = 'AcX = 123.458 | AcY = 45.69 | AcZ = 10.6 | Tmp = 123 | GyX = 1111 | GyY = 8985 | GyZ = 36666' #ser.readline()
+read = read.split(' | ')
+AcX = read[0].split(' = ')
+AcY = read[1].split(' = ')
+AcZ = read[2].split(' = ')
+Tmp = read[3].split(' = ')
+GyX = read[4].split(' = ')
+GyY = read[5].split(' = ')
+GyZ = read[6].split(' = ')
+print(AcX[1] , AcY[1] , AcZ[1])
