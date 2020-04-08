@@ -9,6 +9,8 @@ import time
 import flask
 import serial
 
+from squaternion import euler2quat, quat2euler, Quaternion
+
 # How often to update the BNO sensor data (in hertz).
 BNO_UPDATE_FREQUENCY_HZ = 10
 
@@ -33,6 +35,7 @@ bno_thread = None
 
 ser = serial.Serial('COM4', 9600)
 time.sleep(2)
+
 while True:
     read = str(ser.readline()) #'AcX = 123.458 | AcY = 45.69 | AcZ = 10.6 | Tmp = 123 | GyX = 1111 | GyY = 8985 | GyZ = 36666'
     read = read.split(' | ')
@@ -44,4 +47,6 @@ while True:
         GyX = read[4].split(' = ')
         GyY = read[5].split(' = ')
         GyZ = read[6].split(' = ')
-        print(AcX[1] , AcY[1] , AcZ[1])
+        GyZ = GyZ[1].split('\\')
+        q = euler2quat(int(GyX[1]), int(GyY[1]), int(GyZ[0]))
+        print(int(AcX[1])/16384 , int(AcY[1])/16384 , int(AcZ[1])/16384)
