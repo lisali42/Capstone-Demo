@@ -11,11 +11,9 @@ import serial
 
 from squaternion import euler2quat, quat2euler, Quaternion
 
-ser = serial.Serial('COM4', 9600)
-time.sleep(2)
-
 # How often to update the BNO sensor data (in hertz).
 BNO_UPDATE_FREQUENCY_HZ = 10
+
 
 # Name of the file to store calibration data when the save/load calibration
 # button is pressed.  Calibration data is stored in JSON format.
@@ -41,8 +39,11 @@ bno_thread = None
 def read_bno():
     """Function to read the BNO sensor and update the bno_data object with the
     latest BNO orientation, etc. state.  Must be run in its own thread because
-    it will never return!
-    """
+    it will never return!"""
+    ser = serial.Serial('COM4', 9600)
+    time.sleep(2)
+    read = str(ser.readline())
+    print(read)
     while True:
         read = str(ser.readline())          #read from serial port
         read = read.split(' | ')            #split the string into parts at '|'
@@ -63,24 +64,25 @@ def read_bno():
             #AcY = int(AcY[1]) / 16384
             #AcZ = int(AcZ[1]) / 16384
             #print(int(AcX[1]) / 16384, int(AcY[1]) / 16384, int(AcZ[1]) / 16384)
-        # Capture the lock on the bno_changed condition so the bno_data shared
-        # state can be updated.
-        with bno_changed:
-            bno_data["euler"] = {GyX, GyY, GyZ}
-            bno_data["temp"] = Tmp[1]
-            bno_data["quaternion"] = {q[1], q[2],q[3], q[0]}
-            bno_data["calibration"] = {3,3,3,3}     #"3 indicates fully calibrated; 0 indicates not calibrated" Page 68 BNO055
-            # Notify any waiting threads that the BNO state has been updated.
-            bno_changed.notifyAll()
-        # Sleep until the next reading.
+            # Capture the lock on the bno_changed condition so the bno_data shared
+            # state can be updated.
+            with bno_changed:
+                bno_data["euler"] = [GyX, GyY, GyZ]
+                bno_data["temp"] = Tmp[1]
+                bno_data["quaternion"] = [q[1], q[2],q[3], q[0]]
+                bno_data["calibration"] = [3, 3, 3, 3]     #"3 indicates fully calibrated; 0 indicates not calibrated" Page 68 BNO055
+                # Notify any waiting threads that the BNO state has been updated.
+                bno_changed.notifyAll()
+                print("notified all")
+            # Sleep until the next reading.
         time.sleep(1.0 / BNO_UPDATE_FREQUENCY_HZ)
 
 def bno_sse():
     """Function to handle sending BNO055 sensor data to the client web browser
     using HTML5 server sent events (aka server push).  This is a generator function
     that flask will run in a thread and call to get new data that is pushed to
-    the client web page.
-    """
+    the client web page."""
+    
     # Loop forever waiting for a new BNO055 sensor reading and sending it to
     # the client.  Since this is a generator function the yield statement is
     # used to return a new result.
@@ -111,6 +113,7 @@ def bno_sse():
             "calMag": mag,
         }
         yield "data: {0}\n\n".format(json.dumps(data))
+
 
 @app.before_first_request
 def start_bno_thread():
@@ -163,20 +166,3 @@ if __name__ == "__main__":
     # so multiple connections can be processed at once (very important
     # for using server sent events).
     app.run(host="0.0.0.0", debug=True, threaded=True)
-
-"""
-while True:
-    read = str(ser.readline()) #'AcX = 123.458 | AcY = 45.69 | AcZ = 10.6 | Tmp = 123 | GyX = 1111 | GyY = 8985 | GyZ = 36666'
-    read = read.split(' | ')
-    if len(read) == 7:
-        AcX = read[0].split(' = ')
-        AcY = read[1].split(' = ')
-        AcZ = read[2].split(' = ')
-        Tmp = read[3].split(' = ')
-        GyX = read[4].split(' = ')
-        GyY = read[5].split(' = ')
-        GyZ = read[6].split(' = ')
-        GyZ = GyZ[1].split('\\')
-        q = euler2quat(int(GyX[1])/131, int(GyY[1])/131, int(GyZ[0])/131)
-        print(int(AcX[1])/16384 , int(AcY[1])/16384 , int(AcZ[1])/16384)
-"""
