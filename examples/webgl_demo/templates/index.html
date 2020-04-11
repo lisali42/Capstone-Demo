@@ -30,7 +30,7 @@
       <div class="container">
         <div class="row">
           <div class="col-sm-12">
-            <h1 class="text-center">Adafruit BNO055 Absolute Orientation Sensor Demo</h1>
+            <h1 class="text-center">ECE Capstone Team 48 IMU Sensor Demo</h1>
             <h3 id="connecting">Connecting...</h3>
             <div class="col-sm-12" id="renderer">
             </div>
@@ -58,6 +58,7 @@
                 <label for="model">Model:
                 <select class="form-control" id="model">
                 </select>
+                </label>
               </div>
               <div class="form-group">
                 <button type="button" class="btn btn-primary" id="straighten">Straighten</button>
@@ -110,11 +111,10 @@
               );
             }
           },
-          {
-            name: 'Cat Statue',
+          {  name: 'Bunny',
             load: function(model) {
               stlLoader.load(
-                '{{ url_for('static', filename='cat-top.stl') }}',
+                '{{ url_for('static', filename='v17_head.stl') }}',
                 function(geometry) {
                   // Regenerate normals because they aren't loaded properly.
                   geometry.computeFaceNormals();
@@ -122,9 +122,12 @@
                   // Load the model and build mesh.
                   model.model = new THREE.Mesh(geometry, material);
                   // Rotate, scale, and move so the cat is facing out the screen.
+                  //model.model.rotation.z = -180 * (Math.PI / 180.0);
+                  //model.model.rotation.x = -90 * (Math.PI / 180.0);
                   model.model.rotation.x = -90 * (Math.PI / 180.0);
-                  model.model.scale.set(0.15, 0.15, 0.15);
-                  model.model.position.y = -4;
+                  model.model.scale.set(0.1, 0.1, 0.1);
+                  model.model.position.z = -5;
+                  model.model.position.y = -5;
                 }
               );
             }
@@ -275,17 +278,20 @@
         server.onmessage = function(e) {
           // Update BNO sensor values.
           updateSensorData(JSON.parse(e.data));
+          console.log("updated sensor data")
         };
         server.onopen = function(e) {
           // Hide connecting status and show controls when connection is made.
           $('#connecting').hide();
           $('#controls').show();
+          console.log("entered onopen function")
         };
-        server.onerror = function(e) {
+        /*server.onerror = function(e) {
           // Hide controls and show connecting status if connection closes.
           $('#controls').hide();
           $('#connecting').show();
-        };
+          console.log("entered onerror function")
+        };*/
       });
       </script>
     </body>

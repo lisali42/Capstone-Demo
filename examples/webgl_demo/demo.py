@@ -12,7 +12,7 @@ import serial
 from squaternion import euler2quat, quat2euler, Quaternion
 
 # How often to update the BNO sensor data (in hertz).
-BNO_UPDATE_FREQUENCY_HZ = 10
+BNO_UPDATE_FREQUENCY_HZ = 1000
 
 
 # Name of the file to store calibration data when the save/load calibration
@@ -112,7 +112,7 @@ def bno_sse():
             "calAccel": accel,
             "calMag": mag,
         }
-        yield "data: {0}\n\n".format(json.dumps(data))
+        return "data: {0}\n\n".format(json.dumps(data))
 
 
 @app.before_first_request
