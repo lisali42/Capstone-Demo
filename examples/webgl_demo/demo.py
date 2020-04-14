@@ -9,6 +9,11 @@ import time
 import flask
 import serial
 
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import style
+import numpy as np
+
 from squaternion import euler2quat, quat2euler, Quaternion
 
 # How often to update the BNO sensor data (in hertz).
@@ -42,35 +47,59 @@ def read_bno():
     it will never return!"""
     ser = serial.Serial('COM4', 9600)
     time.sleep(2)
-    read = str(ser.readline())
-    print(read)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    xs = []  # store trials here (n)
+    ys = []  # store relative frequency here
+    print('starting plot')
+
     while True:
-        read = str(ser.readline())          #read from serial port
-        read = read.split(' | ')            #split the string into parts at '|'
-        if len(read) == 7:                  #Make sure we're reading a complete line
-            AcX = read[0].split(' = ')
-            AcY = read[1].split(' = ')
-            AcZ = read[2].split(' = ')
-            Tmp = read[3].split(' = ')
-            GyX = read[4].split(' = ')
-            GyY = read[5].split(' = ')
-            GyZ = read[6].split(' = ')
+        serRead = str(ser.readline())          #read from serial port
+        serRead = serRead.split(' | ')            #split the string into parts at '|'
+        tmilli = serRead[0].split('|')
+        if len(tmilli) == 2:
+            tmilli = tmilli[1]
+        if len(serRead) == 8:                  #Make sure we're reading a complete line
+            AcX = serRead[1].split(' = ')
+            AcY = serRead[2].split(' = ')
+            AcZ = serRead[3].split(' = ')
+            Tmp = serRead[4].split(' = ')
+            GyX = serRead[5].split(' = ')
+            GyY = serRead[6].split(' = ')
+            GyZ = serRead[7].split(' = ')
             GyZ = GyZ[1].split('\\')    #remove \\r\\n at end of line
             q = euler2quat(int(GyX[1]) / 131, int(GyY[1]) / 131, int(GyZ[0]) / 131)     #typecast, scale and convert euler angles to quaternion vector
             GyX = int(GyX[1]) / 131
             GyY = int(GyY[1]) / 131
             GyZ = int(GyZ[0]) / 131
-            #AcX = int(AcX[1]) / 16384
-            #AcY = int(AcY[1]) / 16384
-            #AcZ = int(AcZ[1]) / 16384
+            AcX = int(AcX[1]) / 16384
+            AcY = int(AcY[1]) / 16384
+            AcZ = int(AcZ[1]) / 16384
+
+            xs.append(tmilli)
+            ys.append(AcX)
+            ax.clear()
+            ax.plot(xs, ys, label="Linear force")
+            # Format plot
+            plt.xticks(rotation=45, ha='right')
+            plt.subplots_adjust(bottom=0.30)
+            plt.title('IMU Readings')
+            plt.ylabel('Linear force')
+            plt.legend()
+            plt.axis([1, None, 0, 1.1])  # Use for arbitrary number of trials
+            # plt.axis([1, 100, 0, 1.1]) #Use for 100 trial demo
+
+            plt.show()
+
             #print(int(AcX[1]) / 16384, int(AcY[1]) / 16384, int(AcZ[1]) / 16384)
             # Capture the lock on the bno_changed condition so the bno_data shared
             # state can be updated.
             with bno_changed:
                 bno_data["euler"] = [GyX, GyY, GyZ]
-                bno_data["temp"] = Tmp[1]
+                bno_data["temp"] = float(Tmp[1])
                 bno_data["quaternion"] = [q[1], q[2],q[3], q[0]]
-                bno_data["calibration"] = [3, 3, 3, 3]     #"3 indicates fully calibrated; 0 indicates not calibrated" Page 68 BNO055
+                bno_data["calibration"] = [int(3), int(3), int(3), int(3)]     #"3 indicates fully calibrated; 0 indicates not calibrated" Page 68 BNO055
                 # Notify any waiting threads that the BNO state has been updated.
                 bno_changed.notifyAll()
                 print("notified all")
@@ -165,4 +194,4 @@ if __name__ == "__main__":
     # reloading of the server on changes.  Also make the server threaded
     # so multiple connections can be processed at once (very important
     # for using server sent events).
-    app.run(host="0.0.0.0", debug=True, threaded=True)
+    app.run(host="192.168.0.16", debug=True, threaded=True)

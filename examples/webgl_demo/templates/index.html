@@ -270,9 +270,11 @@
           $('#calGyro').text(data.calGyro);
           $('#calAccel').text(data.calAccel);
           $('#calMag').text(data.calMag);
+          debugger;
         }
 
         // Create server sent event connection to receive BNO sensor data.
+        debugger;
         var server = new EventSource('/bno');
         // Add server sent event handlers.
         server.onmessage = function(e) {
@@ -284,14 +286,17 @@
           // Hide connecting status and show controls when connection is made.
           $('#connecting').hide();
           $('#controls').show();
-          console.log("entered onopen function")
+          debugger;
         };
-        /*server.onerror = function(e) {
+        server.onerror = function(e) {
           // Hide controls and show connecting status if connection closes.
           $('#controls').hide();
           $('#connecting').show();
-          console.log("entered onerror function")
-        };*/
+          debugger;
+        };
+        server.addEventListener("error", event => {
+          console.log(event);
+        });
       });
       </script>
     </body>
