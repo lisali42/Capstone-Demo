@@ -6,18 +6,17 @@ import re
 import threading
 import time
 
+from flask import jsonify
 import flask
 import serial
-
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import style
-import numpy as np
+from werkzeug.serving import WSGIRequestHandler, BaseWSGIServer
 
 from squaternion import euler2quat, quat2euler, Quaternion
 
+from flask_cors import CORS
+
 # How often to update the BNO sensor data (in hertz).
-BNO_UPDATE_FREQUENCY_HZ = 1000
+BNO_UPDATE_FREQUENCY_HZ = 10
 
 
 # Name of the file to store calibration data when the save/load calibration
@@ -26,6 +25,7 @@ CALIBRATION_FILE = "calibration.json"
 
 # Create flask application.
 app = flask.Flask(__name__)
+CORS(app, supports_credentials=True)
 
 # Global state to keep track of the latest readings from the BNO055 sensor.
 # This will be accessed from multiple threads so care needs to be taken to
@@ -47,12 +47,6 @@ def read_bno():
     it will never return!"""
     ser = serial.Serial('COM4', 9600)
     time.sleep(2)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    xs = []  # store trials here (n)
-    ys = []  # store relative frequency here
-    print('starting plot')
 
     while True:
         serRead = str(ser.readline())          #read from serial port
@@ -76,21 +70,6 @@ def read_bno():
             AcX = int(AcX[1]) / 16384
             AcY = int(AcY[1]) / 16384
             AcZ = int(AcZ[1]) / 16384
-
-            xs.append(tmilli)
-            ys.append(AcX)
-            ax.clear()
-            ax.plot(xs, ys, label="Linear force")
-            # Format plot
-            plt.xticks(rotation=45, ha='right')
-            plt.subplots_adjust(bottom=0.30)
-            plt.title('IMU Readings')
-            plt.ylabel('Linear force')
-            plt.legend()
-            plt.axis([1, None, 0, 1.1])  # Use for arbitrary number of trials
-            # plt.axis([1, 100, 0, 1.1]) #Use for 100 trial demo
-
-            plt.show()
 
             #print(int(AcX[1]) / 16384, int(AcY[1]) / 16384, int(AcZ[1]) / 16384)
             # Capture the lock on the bno_changed condition so the bno_data shared
@@ -141,6 +120,7 @@ def bno_sse():
             "calAccel": accel,
             "calMag": mag,
         }
+        #return jsonify(data,200)
         return "data: {0}\n\n".format(json.dumps(data))
 
 
@@ -162,6 +142,7 @@ def start_bno_thread():
 def bno_path():
     # Return SSE response and call bno_sse function to stream sensor data to
     # the webpage.
+    #return bno_sse()
     return flask.Response(bno_sse(), mimetype="text/event-stream")
 
 
@@ -194,4 +175,5 @@ if __name__ == "__main__":
     # reloading of the server on changes.  Also make the server threaded
     # so multiple connections can be processed at once (very important
     # for using server sent events).
+    BaseWSGIServer.protocol_version = "HTTP/1.1"
     app.run(host="192.168.0.16", debug=True, threaded=True)

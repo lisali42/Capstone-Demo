@@ -161,7 +161,7 @@
         var currentModel = null;
 
         // Start with main controls hidden until connected.
-        $('#controls').hide();
+        $('#controls').show();
 
         // Setup Three.js scene and camera.
         var scene = new THREE.Scene();
@@ -215,9 +215,11 @@
           // Update the orientation with the last BNO sensor reading quaternion.
           if (bnoData !== null) {
            orientation.quaternion.set(bnoData.quatX, bnoData.quatY, bnoData.quatZ, bnoData.quatW);
+           bnoData = null;
           }
           renderer.render(scene, camera);
         }
+        debugger;
         render();
 
         // Populate drop-down of 3D models and load all the models..
@@ -280,23 +282,23 @@
         server.onmessage = function(e) {
           // Update BNO sensor values.
           updateSensorData(JSON.parse(e.data));
-          console.log("updated sensor data")
+          debugger;
         };
+        /*
         server.onopen = function(e) {
           // Hide connecting status and show controls when connection is made.
           $('#connecting').hide();
           $('#controls').show();
           debugger;
         };
+
         server.onerror = function(e) {
           // Hide controls and show connecting status if connection closes.
           $('#controls').hide();
           $('#connecting').show();
+          console.log(event.code);
           debugger;
-        };
-        server.addEventListener("error", event => {
-          console.log(event);
-        });
+        };*/
       });
       </script>
     </body>
