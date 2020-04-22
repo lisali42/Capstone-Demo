@@ -2,11 +2,9 @@
 #Team 48
 
 import json
-import re
 import threading
 import time
 
-from flask import jsonify
 import flask
 import serial
 from werkzeug.serving import WSGIRequestHandler, BaseWSGIServer
@@ -59,11 +57,13 @@ def read_bno():
             AcY = serRead[2].split(' = ')
             AcZ = serRead[3].split(' = ')
             Tmp = serRead[4].split(' = ')
-            GyX = serRead[5].split(' = ')
-            GyY = serRead[6].split(' = ')
-            GyZ = serRead[7].split(' = ')
+            GyX = serRead[5].split(' = ')       #roll
+            GyY = serRead[6].split(' = ')       #pitch
+            GyZ = serRead[7].split(' = ')       #yaw
             GyZ = GyZ[1].split('\\')    #remove \\r\\n at end of line
-            q = euler2quat(int(GyX[1]) / 131, int(GyY[1]) / 131, int(GyZ[0]) / 131)     #typecast, scale and convert euler angles to quaternion vector
+            #Inputs are ANGLES not angular acceleration
+            #BELOW INPUTS ARE euler2quat(roll, pitch, yaw, degrees=False), default is in radians...send true if in degrees
+            q = euler2quat(float(GyX[1]) / 131, float(GyY[1]) / 131, float(GyZ[0]) / 131, True)     #typecast, scale and convert euler angles to quaternion vector
             GyX = int(GyX[1]) / 131
             GyY = int(GyY[1]) / 131
             GyZ = int(GyZ[0]) / 131
@@ -71,11 +71,10 @@ def read_bno():
             AcY = int(AcY[1]) / 16384
             AcZ = int(AcZ[1]) / 16384
 
-            #print(int(AcX[1]) / 16384, int(AcY[1]) / 16384, int(AcZ[1]) / 16384)
             # Capture the lock on the bno_changed condition so the bno_data shared
             # state can be updated.
             with bno_changed:
-                bno_data["euler"] = [GyX, GyY, GyZ]
+                bno_data["euler"] = [GyZ, GyY, GyX]
                 bno_data["temp"] = float(Tmp[1])
                 bno_data["quaternion"] = [q[1], q[2],q[3], q[0]]
                 bno_data["calibration"] = [int(3), int(3), int(3), int(3)]     #"3 indicates fully calibrated; 0 indicates not calibrated" Page 68 BNO055
@@ -120,8 +119,7 @@ def bno_sse():
             "calAccel": accel,
             "calMag": mag,
         }
-        #return jsonify(data,200)
-        return "data: {0}\n\n".format(json.dumps(data))
+        yield "data: {0}\n\n".format(json.dumps(data))          #Using return instead of yield will cause SSE connection to close
 
 
 @app.before_first_request
@@ -138,11 +136,10 @@ def start_bno_thread():
     bno_thread.start()
 
 
-@app.route("/bno")
+@app.route("/bno", methods=["GET"])
 def bno_path():
     # Return SSE response and call bno_sse function to stream sensor data to
     # the webpage.
-    #return bno_sse()
     return flask.Response(bno_sse(), mimetype="text/event-stream")
 
 

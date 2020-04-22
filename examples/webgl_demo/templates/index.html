@@ -219,7 +219,6 @@
           }
           renderer.render(scene, camera);
         }
-        debugger;
         render();
 
         // Populate drop-down of 3D models and load all the models..
@@ -272,33 +271,30 @@
           $('#calGyro').text(data.calGyro);
           $('#calAccel').text(data.calAccel);
           $('#calMag').text(data.calMag);
-          debugger;
         }
 
         // Create server sent event connection to receive BNO sensor data.
-        debugger;
-        var server = new EventSource('/bno');
+        var server = new EventSource('http://192.168.0.16:5000/bno');
         // Add server sent event handlers.
         server.onmessage = function(e) {
           // Update BNO sensor values.
+          console.log('DATA');
           updateSensorData(JSON.parse(e.data));
-          debugger;
+          return false;
         };
-        /*
+
         server.onopen = function(e) {
           // Hide connecting status and show controls when connection is made.
           $('#connecting').hide();
           $('#controls').show();
-          debugger;
         };
-
         server.onerror = function(e) {
           // Hide controls and show connecting status if connection closes.
+          //server.close();
           $('#controls').hide();
           $('#connecting').show();
-          console.log(event.code);
-          debugger;
-        };*/
+          console.log(event.code, 'error');
+        };
       });
       </script>
     </body>
