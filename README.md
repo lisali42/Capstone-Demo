@@ -2,6 +2,8 @@
 UBC Team 48 capstone project demonstration of a concussion IMU.
 A live visualization of rotational positioning and linear accelerations of the sensor.
 
+![alt text](https://github.com/lisali42/Capstone-Demo/blob/master/ezgif-2-8c7803fcfd3e.gif)
+
 ## Useful links
 https://howtomechatronics.com/tutorials/arduino/arduino-and-mpu6050-accelerometer-and-gyroscope-tutorial/
 
