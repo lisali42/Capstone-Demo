@@ -52,7 +52,7 @@ def read_bno():
         serRead = str(ser.readline())          #read from serial port
         serRead = serRead.split(' | ')            #split the string into parts at '|'
         tmilli = serRead[0].split('|')
-        degx, degy, degz = 0, 0 ,0
+        degx, degy, degz = 0, 0, 0
         if len(tmilli) == 2:
             tmilli = tmilli[1]
         if len(serRead) == 8:                  #Make sure we're reading a complete line
