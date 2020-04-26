@@ -13,6 +13,8 @@ from squaternion import euler2quat, quat2euler, Quaternion
 
 from flask_cors import CORS
 
+import math
+
 # How often to update the BNO sensor data (in hertz).
 BNO_UPDATE_FREQUENCY_HZ = 10
 
@@ -50,6 +52,7 @@ def read_bno():
         serRead = str(ser.readline())          #read from serial port
         serRead = serRead.split(' | ')            #split the string into parts at '|'
         tmilli = serRead[0].split('|')
+        degx, degy, degz = 0, 0 ,0
         if len(tmilli) == 2:
             tmilli = tmilli[1]
         if len(serRead) == 8:                  #Make sure we're reading a complete line
@@ -61,15 +64,21 @@ def read_bno():
             GyY = serRead[6].split(' = ')       #pitch
             GyZ = serRead[7].split(' = ')       #yaw
             GyZ = GyZ[1].split('\\')    #remove \\r\\n at end of line
-            #Inputs are ANGLES not angular acceleration
-            #BELOW INPUTS ARE euler2quat(roll, pitch, yaw, degrees=False), default is in radians...send true if in degrees
-            q = euler2quat(float(GyX[1]) / 131, float(GyY[1]) / 131, float(GyZ[0]) / 131, True)     #typecast, scale and convert euler angles to quaternion vector
-            GyX = int(GyX[1]) / 131
-            GyY = int(GyY[1]) / 131
-            GyZ = int(GyZ[0]) / 131
+
             AcX = int(AcX[1]) / 16384
             AcY = int(AcY[1]) / 16384
             AcZ = int(AcZ[1]) / 16384
+
+            GyX = int(GyX[1]) / 131
+            GyY = int(GyY[1]) / 131
+            GyZ = int(GyZ[0]) / 131
+
+            degx = ((math.atan(float(AcY) / math.sqrt(pow(AcX, 2) + pow(AcZ, 2))) * 180 / math.pi)-.58)*0.04 + (degx + (GyX-6.8) * (int(tmilli)/1000))*.96
+            degy = ((math.atan(-1 * AcX / math.sqrt(pow(AcY, 2) + pow(AcZ, 2))) * 180 / math.pi)+1.58)*0.04 + (degy + (GyY-2.5) * (int(tmilli)/1000))*.96
+            degz = degz + (GyZ-0.24)*(int(tmilli)/1000)
+            #Inputs are ANGLES not angular acceleration
+            #BELOW INPUTS ARE euler2quat(roll, pitch, yaw, degrees=False), default is in radians...send true if in degrees
+            q = euler2quat(degx, degz, degy, True)     #typecast, scale and convert euler angles to quaternion vector
 
             # Capture the lock on the bno_changed condition so the bno_data shared
             # state can be updated.
@@ -78,6 +87,7 @@ def read_bno():
                 bno_data["temp"] = float(Tmp[1])
                 bno_data["quaternion"] = [q[1], q[2],q[3], q[0]]
                 bno_data["calibration"] = [int(3), int(3), int(3), int(3)]     #"3 indicates fully calibrated; 0 indicates not calibrated" Page 68 BNO055
+                bno_data["acceleration"] = [AcX, AcY, AcZ]
                 # Notify any waiting threads that the BNO state has been updated.
                 bno_changed.notifyAll()
                 print("notified all")
@@ -103,6 +113,7 @@ def bno_sse():
             heading, roll, pitch = bno_data["euler"]
             temp = bno_data["temp"]
             x, y, z, w = bno_data["quaternion"]
+            AccelX, AccelY, AccelZ = bno_data["acceleration"]
             sys, gyro, accel, mag = bno_data["calibration"]
         # Send the data to the connected client in HTML5 server sent event format.
         data = {
@@ -114,6 +125,9 @@ def bno_sse():
             "quatY": y,
             "quatZ": z,
             "quatW": w,
+            "AcX": AccelX,
+            "AcY": AccelY,
+            "AcZ": AccelZ,
             "calSys": sys,
             "calGyro": gyro,
             "calAccel": accel,

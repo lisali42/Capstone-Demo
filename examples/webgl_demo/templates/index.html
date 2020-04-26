@@ -36,6 +36,11 @@
             </div>
           </div>
         </div>
+        <div class="row">
+            <div class="col-sm-12" id="chartContainerX" style="height: 370px; width:33%;"></div>
+            <div class="col-sm-12" id="chartContainerY" style="height: 370px; width:33%;"></div>
+            <div class="col-sm-12" id="chartContainerZ" style="height: 370px; width:33%;"></div>
+          </div>
         <div class="row" id="controls">
           <div class="col-sm-4">
             <h3>Orientation (degrees):</h3>
@@ -215,12 +220,99 @@
           // Update the orientation with the last BNO sensor reading quaternion.
           if (bnoData !== null) {
            orientation.quaternion.set(bnoData.quatX, bnoData.quatY, bnoData.quatZ, bnoData.quatW);
-           bnoData = null;
+           //bnoData = null;
           }
           renderer.render(scene, camera);
         }
         render();
 
+        window.onload = function () {
+          var dpsX = []; // dataPoints
+          var dpsY = []; // dataPoints
+          var dpsZ = []; // dataPoints
+          var marker= "circle";
+          var chartX = new CanvasJS.Chart("chartContainerX", {
+              title :{
+                  text: "Acceleration on X Axis"
+              },
+              axisY: {
+                  includeZero: false
+              },
+              data: [{
+                  type: "line",
+                  dataPoints: dpsX
+              }]
+          });
+          var chartY = new CanvasJS.Chart("chartContainerY", {
+              title :{
+                  text: "Acceleration on Y Axis"
+              },
+              axisY: {
+                  includeZero: false
+              },
+              data: [{
+                  type: "line",
+                  dataPoints: dpsY
+              }]
+          })
+          var chartZ = new CanvasJS.Chart("chartContainerZ", {
+              title :{
+                  text: "Acceleration on Z Axis"
+              },
+              axisY: {
+                  includeZero: false
+              },
+              data: [{
+                  type: "line",
+                  dataPoints: dpsZ
+              }]
+          })
+        var xVal = 0;
+        var yValX = 0;
+        var yValY = 0;
+        var yValZ = 0;
+        var updateInterval = 1000;
+        var dataLength = 20; // number of dataPoints visible at any point
+
+        var updateChart = function (count) {
+            count = count || 1;
+            for (var j = 0; j < count; j++) {
+                if(bnoData !== null){
+                  yValX = bnoData.AcX;
+                  yValY = bnoData.AcY;
+                  yValZ = bnoData.AcZ;
+                }
+                else{
+                  yValX = 0;
+                  yValY = 0;
+                  yValZ = 0;
+                }
+                dpsX.push({
+                    x: xVal,
+                    y: yValX
+                });
+                dpsY.push({
+                    x: xVal,
+                    y: yValY
+                });
+                dpsZ.push({
+                    x: xVal,
+                    y: yValZ
+                });
+                xVal++;
+            }
+            if (dpsX.length > dataLength) {
+                dpsX.shift();
+                dpsY.shift();
+                dpsZ.shift();
+            }
+            chartX.render();
+            chartY.render();
+            chartZ.render();
+        };
+          updateChart(dataLength);
+          setInterval(function(){updateChart()}, updateInterval);
+        }
         // Populate drop-down of 3D models and load all the models..
         $.each(models, function(index, model) {
           // Populate drop-down.
@@ -271,6 +363,8 @@
           $('#calGyro').text(data.calGyro);
           $('#calAccel').text(data.calAccel);
           $('#calMag').text(data.calMag);
+          console.log(data.Acx);
+          console.log(bnoData.heading);
         }
 
         // Create server sent event connection to receive BNO sensor data.
@@ -297,5 +391,6 @@
         };
       });
       </script>
+      <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     </body>
 </html>
