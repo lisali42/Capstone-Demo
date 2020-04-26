@@ -33,7 +33,7 @@ Run the following on your Python terminal
 I had some issues with pyserial but I just uninstalled the library and reinstalled it and it worked fine (see below to uninstall).
 `pip uninstall pyserial`
 
-## Backend
+## Back End
 
 In the python code, we have a thread, `read_bno()`, that continuously reads incomming IMU data from serial and a seperate thread that listens for requests from the client `bno_sse()`.
 
@@ -55,7 +55,7 @@ degz = degz + (GyZ-0.24)*(int(tmilli)/1000) #.24 is to get rid of offset
 ````
 Inbound values including linear acceleration may need some filters to remove the noise but it all depends on how much noise there is from the IMU.
 
-## FrontEnd
+## Front End
 
 Most of the FrontEnd is from this [tutorial](https://learn.adafruit.com/bno055-absolute-orientation-sensor-with-raspberry-pi-and-beaglebone-black/hardware)
 
