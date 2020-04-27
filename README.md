@@ -17,7 +17,7 @@ On the server side, IMU parameters are received, parsed and then sent to the fro
 
 Libaries used
 ------
-Will be using Flask and pyserial library. Installation notes are below
+Installation notes are below
 Run the following on your Python terminal
 
 `pip install pyserial`
