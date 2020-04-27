@@ -37,6 +37,8 @@ I had some issues with pyserial but I just uninstalled the library and reinstall
 
 ## Back End
 
+Most of the front end and back end is from this [tutorial](https://learn.adafruit.com/bno055-absolute-orientation-sensor-with-raspberry-pi-and-beaglebone-black/hardware)
+
 In the python code, we have a thread, `read_bno()`, that continuously reads incomming IMU data from serial and a seperate thread that listens for requests from the client `bno_sse()`.
 
 Depending on what format the IMU sends data, how you parse data may be different. Below is a sample string I was working with.
@@ -58,8 +60,6 @@ degz = degz + (GyZ-0.24)*(int(tmilli)/1000) #.24 is to get rid of offset
 Inbound values including linear acceleration may need some filters to remove the noise but it all depends on how much noise there is from the IMU.
 
 ## Front End
-
-Most of the FrontEnd is from this [tutorial](https://learn.adafruit.com/bno055-absolute-orientation-sensor-with-raspberry-pi-and-beaglebone-black/hardware)
 
 Custom 3D models can be added to this web app in the models variable see below
 ````javascript
