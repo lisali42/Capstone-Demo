@@ -5,9 +5,12 @@ A live visualization of rotational positioning and linear accelerations of the s
 ![alt text](https://github.com/lisali42/Capstone-Demo/blob/master/ezgif-2-8c7803fcfd3e.gif)
 
 ## Useful links
-https://howtomechatronics.com/tutorials/arduino/arduino-and-mpu6050-accelerometer-and-gyroscope-tutorial/
 
 If cannot connect to server try: https://stackoverflow.com/questions/12978466/javascript-eventsource-sse-not-firing-in-browser/13135995#13135995?newreg=0e76543ee42b47029c5a2c60a3d2797f
+
+I used bits and pieces of existing code from the following tutorials:
+https://howtomechatronics.com/tutorials/arduino/arduino-and-mpu6050-accelerometer-and-gyroscope-tutorial/
+https://learn.adafruit.com/bno055-absolute-orientation-sensor-with-raspberry-pi-and-beaglebone-black/hardware
 
 ## Introduction
 
